@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.35.1
+
+- Update Ollama to 0.35.1.
+
 ## 0.35.0
 
 - Track Ollama 0.35.0.

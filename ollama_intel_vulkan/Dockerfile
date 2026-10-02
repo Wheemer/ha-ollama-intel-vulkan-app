@@ -1,5 +1,5 @@
 ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base-debian:trixie
-ARG OLLAMA_VERSION=0.35.0
+ARG OLLAMA_VERSION=0.35.1
 
 FROM ollama/ollama:${OLLAMA_VERSION} AS ollama
 
