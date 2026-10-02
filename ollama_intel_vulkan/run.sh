@@ -15,6 +15,7 @@ mkdir -p /data/.ollama/models
 
 if [ "$vulkan_enabled" = "true" ]; then
     export OLLAMA_VULKAN=1
+    export OLLAMA_IGPU_ENABLE=1
     if [ ! -e /dev/dri/renderD128 ]; then
         echo "ERROR: Intel render node /dev/dri/renderD128 is unavailable."
         exit 1
