@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Add dedicated Home Assistant app icon and logo artwork.
+
 ## 0.1.2
 
 - Expose Ollama on the standard host port 11434 after replacing the legacy app.
