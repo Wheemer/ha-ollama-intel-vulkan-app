@@ -24,11 +24,6 @@ def replace_once(text: str, pattern: str, replacement: str) -> str:
     return updated
 
 
-def bump_patch(version: str) -> str:
-    major, minor, patch = map(int, version.split("."))
-    return f"{major}.{minor}.{patch + 1}"
-
-
 def main() -> None:
     request = urllib.request.Request(RELEASE_URL, headers={"Accept": "application/vnd.github+json"})
     with urllib.request.urlopen(request, timeout=30) as response:
@@ -46,7 +41,7 @@ def main() -> None:
         version_match = re.search(r"^version:\s*([^\s]+)$", config, re.MULTILINE)
         if version_match is None:
             raise RuntimeError("App version was not found")
-        app_version = bump_patch(version_match.group(1))
+        app_version = latest
 
         DOCKERFILE.write_text(
             replace_once(dockerfile, r"^ARG OLLAMA_VERSION=[^\s]+$", f"ARG OLLAMA_VERSION={latest}"),
