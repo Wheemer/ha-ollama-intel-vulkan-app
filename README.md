@@ -15,7 +15,7 @@ Ollama for Intel Vulkan runs local Ollama models on Home Assistant OS using the 
 2. Install **Ollama for Intel Vulkan**.
 3. Keep **Vulkan** and **Require GPU** enabled, then start the app.
 4. In the app log, confirm that `vulkaninfo` lists the Intel GPU and Ollama reports an inference compute device other than CPU.
-5. During validation, use `http://192.168.1.40:11435` for the Ollama integration. The existing app stays on port `11434` until cutover.
+5. Use `http://192.168.1.40:11434` for the Ollama integration.
 
 Models persist under the app data directory and are excluded from Home Assistant backups. Pull models with `ollama pull <model>` through the app container after installation.
 

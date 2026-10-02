@@ -1,4 +1,4 @@
-version: 0.1.1
+version: 0.1.2
 slug: ollama_intel_vulkan
 name: Ollama for Intel Vulkan
 description: Local Ollama server with Intel GPU acceleration through Vulkan
@@ -17,7 +17,7 @@ devices:
 apparmor: false
 video: true
 ports:
-  "11434/tcp": 11435
+  "11434/tcp": 11434
 options:
   vulkan: true
   require_gpu: true

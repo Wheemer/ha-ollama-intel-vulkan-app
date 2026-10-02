@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Expose Ollama on the standard host port 11434 after replacing the legacy app.
+
 ## 0.1.1
 
 - Enable Ollama's integrated-GPU path after Vulkan verifies Intel HD Graphics 630.
