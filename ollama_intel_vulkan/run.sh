@@ -3,9 +3,12 @@ set -euo pipefail
 
 vulkan_enabled="$(jq -r '.vulkan' /data/options.json)"
 require_gpu="$(jq -r '.require_gpu' /data/options.json)"
-export OLLAMA_CONTEXT_LENGTH="$(jq -r '.context_length' /data/options.json)"
-export OLLAMA_NUM_PARALLEL="$(jq -r '.num_parallel' /data/options.json)"
-export OLLAMA_MAX_LOADED_MODELS="$(jq -r '.max_loaded_models' /data/options.json)"
+context_length="$(jq -r '.context_length' /data/options.json)"
+num_parallel="$(jq -r '.num_parallel' /data/options.json)"
+max_loaded_models="$(jq -r '.max_loaded_models' /data/options.json)"
+export OLLAMA_CONTEXT_LENGTH="$context_length"
+export OLLAMA_NUM_PARALLEL="$num_parallel"
+export OLLAMA_MAX_LOADED_MODELS="$max_loaded_models"
 export OLLAMA_DEBUG=INFO
 
 mkdir -p /data/.ollama/models
