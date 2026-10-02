@@ -26,3 +26,5 @@ The repository checks the official Ollama release once daily. When a release cha
 ## Credits
 
 Uses the official [Ollama](https://ollama.com/) container runtime. This app is independently maintained for Intel Vulkan use on Home Assistant.
+
+The Ollama logo assets are reproduced from the official [Ollama repository](https://github.com/ollama/ollama) under its MIT license.
