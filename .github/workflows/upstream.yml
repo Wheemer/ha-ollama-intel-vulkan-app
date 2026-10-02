@@ -1,0 +1,74 @@
+name: Check upstream releases
+
+on:
+  schedule:
+    - cron: "02 17 * * *"
+
+permissions:
+  attestations: write
+  contents: write
+  id-token: write
+  packages: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check official Ollama releases
+        id: update
+        run: python3 scripts/update-upstream.py
+      - name: Build updated image
+        if: steps.update.outputs.changed == 'true'
+        run: |
+          docker build \
+            --build-arg BUILD_ARCH=amd64 \
+            --build-arg BUILD_VERSION="${{ steps.update.outputs.version }}" \
+            --build-arg BUILD_NAME="Ollama for Intel Vulkan" \
+            --build-arg BUILD_DESCRIPTION="Local Ollama server with Intel GPU acceleration through Vulkan" \
+            --build-arg BUILD_REPOSITORY="${{ github.repository }}" \
+            --build-arg BUILD_REF="${{ github.sha }}" \
+            --tag "ghcr.io/wheemer/amd64-app-ollama-intel-vulkan:${{ steps.update.outputs.version }}" \
+            ollama_intel_vulkan
+      - name: Log in to GitHub Container Registry
+        if: steps.update.outputs.changed == 'true'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish updated image
+        id: publish
+        if: steps.update.outputs.changed == 'true'
+        run: |
+          image="ghcr.io/wheemer/amd64-app-ollama-intel-vulkan:${{ steps.update.outputs.version }}"
+          docker push "$image"
+          digest="$(docker image inspect "$image" --format '{{ index .RepoDigests 0 }}' | cut -d@ -f2)"
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+      - name: Attest image provenance
+        if: steps.update.outputs.changed == 'true'
+        uses: actions/attest-build-provenance@v4.2.2
+        with:
+          subject-name: ghcr.io/wheemer/amd64-app-ollama-intel-vulkan
+          subject-digest: ${{ steps.publish.outputs.digest }}
+          push-to-registry: true
+      - name: Merge the automatic update
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          branch="automation/upstream-updates"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add ollama_intel_vulkan/config.yaml ollama_intel_vulkan/Dockerfile ollama_intel_vulkan/CHANGELOG.md
+          git commit -m "Update Ollama runtime"
+          git push --force origin "$branch"
+          pr_url="$(gh pr create --base main --head "$branch" --title "Update Ollama runtime" --body "Automatic Ollama release update. The image was built, scanned, published, and attested before this PR was created.")"
+          gh pr merge "$pr_url" --squash --delete-branch
+      - name: Publish release
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "v${{ steps.update.outputs.version }}" --target main --title "v${{ steps.update.outputs.version }}" --generate-notes

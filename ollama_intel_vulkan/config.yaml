@@ -1,0 +1,33 @@
+version: 0.1.0
+slug: ollama_intel_vulkan
+name: Ollama for Intel Vulkan
+description: Local Ollama server with Intel GPU acceleration through Vulkan
+url: https://github.com/Wheemer/ha-ollama-intel-vulkan-app
+arch:
+  - amd64
+init: false
+stage: stable
+startup: services
+backup_exclude:
+  - ".ollama/models/**"
+map:
+  - share:rw
+devices:
+  - /dev/dri
+apparmor: false
+video: true
+ports:
+  "11434/tcp": 11435
+options:
+  vulkan: true
+  require_gpu: true
+  context_length: 2048
+  num_parallel: 1
+  max_loaded_models: 1
+schema:
+  vulkan: bool
+  require_gpu: bool
+  context_length: int(256,32768)
+  num_parallel: int(1,8)
+  max_loaded_models: int(1,4)
+image: ghcr.io/wheemer/{arch}-app-ollama-intel-vulkan

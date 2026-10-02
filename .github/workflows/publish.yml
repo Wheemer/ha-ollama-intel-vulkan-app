@@ -1,0 +1,63 @@
+name: Publish app image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "ollama_intel_vulkan/**"
+      - ".github/workflows/publish.yml"
+
+permissions:
+  attestations: write
+  contents: write
+  id-token: write
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Resolve version
+        id: version
+        run: |
+          version="$(sed -n 's/^version: //p' ollama_intel_vulkan/config.yaml)"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build image
+        run: |
+          docker build \
+            --build-arg BUILD_ARCH=amd64 \
+            --build-arg BUILD_VERSION="${{ steps.version.outputs.version }}" \
+            --build-arg BUILD_NAME="Ollama for Intel Vulkan" \
+            --build-arg BUILD_DESCRIPTION="Local Ollama server with Intel GPU acceleration through Vulkan" \
+            --build-arg BUILD_REPOSITORY="${{ github.repository }}" \
+            --build-arg BUILD_REF="${{ github.sha }}" \
+            --build-arg BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            --tag "ghcr.io/wheemer/amd64-app-ollama-intel-vulkan:${{ steps.version.outputs.version }}" \
+            ollama_intel_vulkan
+      - name: Publish image
+        id: publish
+        run: |
+          image="ghcr.io/wheemer/amd64-app-ollama-intel-vulkan:${{ steps.version.outputs.version }}"
+          docker push "$image"
+          digest="$(docker image inspect "$image" --format '{{ index .RepoDigests 0 }}' | cut -d@ -f2)"
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+      - name: Attest image provenance
+        uses: actions/attest-build-provenance@v4.2.2
+        with:
+          subject-name: ghcr.io/wheemer/amd64-app-ollama-intel-vulkan
+          subject-digest: ${{ steps.publish.outputs.digest }}
+          push-to-registry: true
+      - name: Create initial release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v${{ steps.version.outputs.version }}"
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "$tag" --generate-notes
