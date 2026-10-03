@@ -71,4 +71,4 @@ jobs:
         if: steps.update.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "v${{ steps.update.outputs.version }}" --target main --title "v${{ steps.update.outputs.version }}" --generate-notes
+        run: gh release create "v${{ steps.update.outputs.version }}" --target main --title "v${{ steps.update.outputs.version }}" --notes "Ollama ${{ steps.update.outputs.version }} for Intel Vulkan."
