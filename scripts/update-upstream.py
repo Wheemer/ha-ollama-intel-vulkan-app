@@ -27,7 +27,9 @@ def replace_once(text: str, pattern: str, replacement: str) -> str:
 def main() -> None:
     request = urllib.request.Request(RELEASE_URL, headers={"Accept": "application/vnd.github+json"})
     with urllib.request.urlopen(request, timeout=30) as response:
-        latest = json.load(response)["tag_name"].removeprefix("v")
+        release = json.load(response)
+    latest = release["tag_name"].removeprefix("v")
+    upstream_url = release["html_url"]
 
     dockerfile = DOCKERFILE.read_text(encoding="utf-8")
     current_match = re.search(r"^ARG OLLAMA_VERSION=([^\s]+)$", dockerfile, re.MULTILINE)
@@ -62,6 +64,8 @@ def main() -> None:
     with output.open("a", encoding="utf-8") as handle:
         handle.write(f"changed={'true' if changed else 'false'}\n")
         handle.write(f"version={app_version}\n")
+        handle.write(f"previous_version={current}\n")
+        handle.write(f"upstream_url={upstream_url}\n")
 
 
 if __name__ == "__main__":

@@ -60,4 +60,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="v${{ steps.version.outputs.version }}"
-          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "$tag" --notes "Ollama ${{ steps.version.outputs.version }} for Intel Vulkan."
+          notes="$(mktemp)"
+          python3 scripts/release-notes.py --version "${{ steps.version.outputs.version }}" > "$notes"
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "$tag" --notes-file "$notes"
