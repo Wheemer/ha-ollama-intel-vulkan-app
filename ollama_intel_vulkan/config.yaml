@@ -1,4 +1,4 @@
-version: 0.40.0
+version: 0.40.1
 slug: ollama_intel_vulkan
 name: Ollama for Intel Vulkan
 description: Local Ollama server with Intel GPU acceleration through Vulkan
