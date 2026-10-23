@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.40.10
+
+- Update Ollama to 0.40.10.
+
 ## 0.40.8
 
 - Update Ollama to 0.40.8.
