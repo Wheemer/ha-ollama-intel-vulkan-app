@@ -25,7 +25,10 @@ def replace_once(text: str, pattern: str, replacement: str) -> str:
 
 
 def main() -> None:
-    request = urllib.request.Request(RELEASE_URL, headers={"Accept": "application/vnd.github+json"})
+    headers = {"Accept": "application/vnd.github+json"}
+    if token := os.environ.get("GH_TOKEN"):
+        headers["Authorization"] = f"Bearer {token}"
+    request = urllib.request.Request(RELEASE_URL, headers=headers)
     with urllib.request.urlopen(request, timeout=30) as response:
         release = json.load(response)
     latest = release["tag_name"].removeprefix("v")

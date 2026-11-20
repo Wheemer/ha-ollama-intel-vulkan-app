@@ -1,6 +1,7 @@
 name: Check upstream releases
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "02 17 * * *"
 
@@ -18,9 +19,11 @@ jobs:
       - uses: actions/checkout@v7
       - name: Check official Ollama releases
         id: update
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: python3 scripts/update-upstream.py
       - name: Build updated image
-        if: steps.update.outputs.changed == 'true'
+        if: github.event_name == 'schedule' && steps.update.outputs.changed == 'true'
         run: |
           for attempt in 1 2 3; do
             if docker build \
@@ -40,7 +43,7 @@ jobs:
             sleep "$((attempt * 30))"
           done
       - name: Log in to GitHub Container Registry
-        if: steps.update.outputs.changed == 'true'
+        if: github.event_name == 'schedule' && steps.update.outputs.changed == 'true'
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -48,21 +51,21 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish updated image
         id: publish
-        if: steps.update.outputs.changed == 'true'
+        if: github.event_name == 'schedule' && steps.update.outputs.changed == 'true'
         run: |
           image="ghcr.io/wheemer/amd64-app-ollama-intel-vulkan:${{ steps.update.outputs.version }}"
           docker push "$image"
           digest="$(docker image inspect "$image" --format '{{ index .RepoDigests 0 }}' | cut -d@ -f2)"
           echo "digest=${digest}" >> "$GITHUB_OUTPUT"
       - name: Attest image provenance
-        if: steps.update.outputs.changed == 'true'
+        if: github.event_name == 'schedule' && steps.update.outputs.changed == 'true'
         uses: actions/attest-build-provenance@v4.2.2
         with:
           subject-name: ghcr.io/wheemer/amd64-app-ollama-intel-vulkan
           subject-digest: ${{ steps.publish.outputs.digest }}
           push-to-registry: true
       - name: Merge the automatic update
-        if: steps.update.outputs.changed == 'true'
+        if: github.event_name == 'schedule' && steps.update.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -76,7 +79,7 @@ jobs:
           pr_url="$(gh pr create --base main --head "$branch" --title "Update Ollama runtime" --body "Automatic Ollama release update. The image was built, scanned, published, and attested before this PR was created.")"
           gh pr merge "$pr_url" --squash --delete-branch
       - name: Publish release
-        if: steps.update.outputs.changed == 'true'
+        if: github.event_name == 'schedule' && steps.update.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
