@@ -5,8 +5,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
+import urllib.error
 import urllib.request
 
 
@@ -15,12 +17,19 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 def upstream_highlights(version: str) -> list[str]:
     """Return the meaningful, user-facing bullets from Ollama's release."""
+    headers = {"Accept": "application/vnd.github+json"}
+    if token := os.environ.get("GH_TOKEN"):
+        headers["Authorization"] = f"Bearer {token}"
     request = urllib.request.Request(
         f"https://api.github.com/repos/ollama/ollama/releases/tags/v{version}",
-        headers={"Accept": "application/vnd.github+json"},
+        headers=headers,
     )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        body = json.load(response).get("body", "")
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            body = json.load(response).get("body") or ""
+    except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+        print(f"Could not fetch optional Ollama release highlights: {exc}", file=sys.stderr)
+        return []
 
     lines = body.replace("\r\n", "\n").splitlines()
     highlights: list[str] = []
@@ -49,7 +58,7 @@ def upstream_highlights(version: str) -> list[str]:
             highlights.append(match.group(1).strip())
 
     intro = " ".join(preface)
-    sentences = re.split(r"(?<=[.!?])\s+", intro)
+    sentences = re.split(r"(?<=[.!?])\s+", intro) if intro else []
     return [*sentences[:2], *highlights][:5]
 
 
